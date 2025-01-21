@@ -1,14 +1,16 @@
-### API Documentation
+# 📚 API Documentation
 
-#### Host
-**Base URL:** `hw-api.bebabeggie.com`
+## 🌐 Host
+**Base URL:** `https://hw-api.bebabeggie.com`
 
-### Endpoints & Data Formats
+---
 
-#### 1. **Sync**
-**Endpoint:** `hw-api.bebabeggie.com/sync`
+## 🚀 Endpoints & Data Formats
 
-**Request Data Format:**
+### 1. **Sync** 🔄
+**Endpoint:** `POST /sync`
+
+#### 📥 Request Data Format
 ```json
 {
   "lockerId": "uniqueSerial",
@@ -19,7 +21,7 @@
 }
 ```
 
-**Example with Active Session:**
+#### 📤 Example with Active Session
 If a compartment (e.g., position 1) has an active session:
 ```json
 {
@@ -42,10 +44,10 @@ If a compartment (e.g., position 1) has an active session:
 
 ---
 
-#### 2. **Bill**
-**Endpoint:** `hw-api.bebabeggie.com/bill`
+### 2. **Bill** 💸
+**Endpoint:** `POST /bill`
 
-**Request Data Format:**
+#### 📥 Request Data Format
 ```json
 {
   "lockerId": "uniqueSerial",
@@ -57,26 +59,26 @@ If a compartment (e.g., position 1) has an active session:
 }
 ```
 
-**Behavior After Request:**
-- After the bill is sent, the server will send an SMS and the session should end.
+#### 🛠️ Behavior After Request
+- After the bill is sent, the server will send an SMS, and the session should end.
 - To end the session, the API will send a payload to open the compartment:
-```json
-{"open": 3}
-```
+  ```json
+  {"open": 3}
+  ```
 - **Note:** If you receive `{"open": 3}` but no bill was sent for the compartment, just open the compartment without ending its session.
 
 ---
 
-#### 3. **Compartment Availability Management**
+### 3. **Compartment Availability Management** 🗄️
 
-##### **Mark Compartments Unavailable**
+#### 🔒 Mark Compartments Unavailable
 **Payload:**
 ```json
 {"unavailable": [1, 2, 3]}
 ```
 **Action:** Mark compartments 1, 2, and 3 as unavailable.
 
-##### **Open Compartment Without Changing Availability**
+#### 🔓 Open Compartment Without Changing Availability
 **Payloads:**
 - Open compartment 1:
   ```json
@@ -88,7 +90,7 @@ If a compartment (e.g., position 1) has an active session:
   ```
 **Action:** Open the specified compartment but do not make it available if it was previously marked as unavailable.
 
-##### **Make Compartments Available**
+#### ✅ Make Compartments Available
 **Payloads:**
 - Make compartments 1 and 3 available:
   ```json
@@ -102,9 +104,9 @@ If a compartment (e.g., position 1) has an active session:
 
 ---
 
-### Additional Notes
+## 📝 Additional Notes
 
-#### Request Success and Failure
+### ✅ Request Success and Failure
 - On a successful request, the response format should be:
   ```json
   {"success": true}
@@ -113,19 +115,22 @@ If a compartment (e.g., position 1) has an active session:
   ```json
   {"success": false, "message": "Reason why the request failed"}
   ```
-  - To do a health check
-    **Endpoint:** `hw-api.bebabeggie.com/bill`
-  -  Response message:
-  ```json
-  {"bill":{"success":true},"sync":{"success":true}}
-  ```
 
-#### Data Format Conventions
+### 🩺 Health Check
+**Endpoint:** `GET /healt-check`  
+**Response:**
+```json
+{
+  "bill": {"success": true},
+  "sync": {"success": true}
+}
+```
+
+### 📅 Data Format Conventions
 - **start** and **end:** Represented as timestamps.
 - **duration:** Represented in minutes.
 
-#### Compartment Size Key
+### 📦 Compartment Size Key
 - `0`: Small
 - `1`: Medium
 - `2`: Large
-
