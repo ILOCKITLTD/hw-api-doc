@@ -113,6 +113,12 @@ If a compartment (e.g., position 1) has an active session:
   ```json
   {"success": false, "message": "Reason why the request failed"}
   ```
+  - To do a health check
+    **Endpoint:** `hw-api.bebabeggie.com/bill`
+  -  Response message:
+  ```json
+  {"bill":{"success":true},"sync":{"success":true}}
+  ```
 
 #### Data Format Conventions
 - **start** and **end:** Represented as timestamps.
