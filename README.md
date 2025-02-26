@@ -1,7 +1,3 @@
-Here’s the API documentation formatted for your `README.md` file. You can copy and paste this directly into your repository's `README.md`:
-
----
-
 # 📚 API Documentation
 
 ## 🌐 Host
@@ -149,5 +145,3 @@ The API is versioned to ensure backward compatibility. The current version is `v
 For any issues or questions, contact support at [support@bebabeggie.com](mailto:support@bebabeggie.com).
 
 ---
-
-This `README.md` is ready to be used in your repository! Let me know if you need further adjustments. 🚀
