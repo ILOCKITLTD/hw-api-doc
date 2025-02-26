@@ -1,3 +1,7 @@
+Here’s the API documentation formatted for your `README.md` file. You can copy and paste this directly into your repository's `README.md`:
+
+---
+
 # 📚 API Documentation
 
 ## 🌐 Host
@@ -5,132 +9,145 @@
 
 ---
 
-## 🚀 Endpoints & Data Formats
+## 🚀 Workflow Overview
+This API manages locker compartments, including setup, synchronization, session management, and compartment availability.
 
-### 1. **Sync** 🔄
-**Endpoint:** `POST /sync`
+---
 
-#### 📥 Request Data Format
+### 1. Initial Setup
+On first boot:
+- Assign all compartments as `small`.
+- Send a request to `/setup` with the locker details.
+
+#### 📥 Request to `/setup`
 ```json
 {
-  "lockerId": "uniqueSerial",
-  "compartments": [
-    {"size": 0, "position": 1},
-    {"size": 0, "position": 2}
-  ]
+  "lockerId": "some-id",
+  "compartments": 4
 }
 ```
 
-#### 📤 Example with Active Session
-If a compartment (e.g., position 1) has an active session:
+#### 📤 SMS Instruction for Compartment Sizes
+You will receive an SMS to configure compartment sizes:
 ```json
 {
-  "lockerId": "uniqueSerial",
-  "compartments": [
+  "action": "setup",
+  "lockers": ["s", "m", "l", "xl", "sc"]
+}
+```
+**Key:**  
+- `s` = Small  
+- `m` = Medium  
+- `l` = Large  
+- `xl` = Extra Large  
+- `sc` = Special Case  
+
+---
+
+### 2. Synchronize Active Compartments
+When you receive an SMS with the action `sync-active`, make a request to report active compartments.
+
+#### 📥 Request to `/sync-active`
+```json
+{
+  "lockerId": "some-id",
+  "active": [
     {
-      "size": 0,
-      "position": 1,
-      "session": {
-        "phone": "0700824555",
-        "start": "1736263096525",
-        "end": "-",
-        "duration": "-"
-      }
+      "position": 0,
+      "phone": "0700824555",
+      "start": "1736263096525"
     },
-    {"size": 0, "position": 2}
+    {
+      "position": 3,
+      "phone": "0700824555",
+      "start": "1736263096525"
+    }
   ]
 }
 ```
 
 ---
 
-### 2. **Bill** 💸
-**Endpoint:** `POST /bill`
+### 3. End Session and Billing
+When a customer completes their session, make a request to `/end-session` to notify the server.
 
-#### 📥 Request Data Format
+#### 📥 Request to `/end-session`
 ```json
 {
-  "lockerId": "uniqueSerial",
-  "compartment": 3,
-  "phone": "0700824555",
-  "start": "1736263096525",
-  "end": "1736263096525",
-  "duration": "120"
+  "lockerId": "some-id",
+  "compartment": {
+    "position": 0,
+    "phone": "0700824555",
+    "start": "1736263096525",
+    "end": "17489654386487"
+  }
 }
 ```
 
-#### 🛠️ Behavior After Request
-- After the bill is sent, the server will send an SMS, and the session should end.
-- To end the session, the API will send a payload to open the compartment:
-  ```json
-  {"open": 3}
-  ```
-- **Note:** If you receive `{"open": 3}` but no bill was sent for the compartment, just open the compartment without ending its session.
+#### 📤 SMS Instruction to End Session
+After calculating the duration and sending an STK push to the customer, you will receive an SMS to end the session:
+```json
+{
+  "action": "end-session",
+  "compartment": 6
+}
+```
+**Action:** End the session for compartment 6 and open it.
 
 ---
 
-### 3. **Compartment Availability Management** 🗄️
+### 4. Compartment Availability Management
+You will receive an SMS to update compartment availability.
 
-#### 🔒 Mark Compartments Unavailable
-**Payload:**
+#### 📥 SMS Instruction for Availability
 ```json
-{"unavailable": [1, 2, 3]}
+{
+  "action": "availability",
+  "lockers": [1, 1, 0, 0, 1]
+}
 ```
-**Action:** Mark compartments 1, 2, and 3 as unavailable.
+**Key:**  
+- `0` = Not Available  
+- `1` = Available  
 
-#### 🔓 Open Compartment Without Changing Availability
-**Payloads:**
-- Open compartment 1:
-  ```json
-  {"open": 1}
-  ```
-- Open compartment 3:
-  ```json
-  {"open": 3}
-  ```
-**Action:** Open the specified compartment but do not make it available if it was previously marked as unavailable.
-
-#### ✅ Make Compartments Available
-**Payloads:**
-- Make compartments 1 and 3 available:
-  ```json
-  {"available": [1, 3]}
-  ```
-- Make compartment 2 available:
-  ```json
-  {"available": [2]}
-  ```
-**Action:** Mark the specified compartments as available.
+#### 📥 SMS Instruction to Open Compartments
+```json
+{
+  "action": "open",
+  "lockers": [1, 0, 0, 0, 1]
+}
+```
+**Action:** Open compartments marked with `1`.
 
 ---
 
 ## 📝 Additional Notes
 
 ### ✅ Request Success and Failure
-- On a successful request, the response format should be:
+- On a successful request, the response format will be:
   ```json
   {"success": true}
   ```
-- On a failed request, the response format should include a failure message:
+- On a failed request, the response format will include a failure message:
   ```json
   {"success": false, "message": "Reason why the request failed"}
   ```
 
-### 🩺 Health Check
-**Endpoint:** `GET /healt-check`  
-**Response:**
-```json
-{
-  "bill": {"success": true},
-  "sync": {"success": true}
-}
-```
+### 🔄 Retry Mechanism
+If a request fails due to a temporary issue (e.g., network error), retry the request after a short delay (e.g., 5 seconds). Avoid excessive retries to prevent overloading the server.
 
-### 📅 Data Format Conventions
-- **start** and **end:** Represented as timestamps.
-- **duration:** Represented in minutes.
+### 📡 Rate Limiting
+The API enforces rate limiting to ensure fair usage. If you exceed the allowed number of requests, you will receive a `429 Too Many Requests` response. Wait for the specified `Retry-After` period before making further requests.
 
-### 📦 Compartment Size Key
-- `0`: Small
-- `1`: Medium
-- `2`: Large
+### 🔐 Security
+All API requests must be made over HTTPS. Ensure that sensitive data (e.g., phone numbers) is encrypted in transit.
+
+### 📄 Versioning
+The API is versioned to ensure backward compatibility. The current version is `v1`. Future updates will be released under new version numbers (e.g., `v2`).
+
+### 📧 Support
+For any issues or questions, contact support at [support@bebabeggie.com](mailto:support@bebabeggie.com).
+
+---
+
+This `README.md` is ready to be used in your repository! Let me know if you need further adjustments. 🚀
